@@ -94,6 +94,12 @@
             border: none;
             border-radius: 5px;
         }
+
+        .top-right {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
     </style>
 </head>
 <body>
@@ -125,6 +131,7 @@
                 <div id="giftsContainer">
                     <!-- Champs pour les cadeaux seront ajoutés dynamiquement ici -->
                 </div>
+                <button id="addGiftButton">Ajouter un cadeau</button>
                 <button id="saveButton">Sauvegarder</button>
             </div>
         </div>
@@ -133,6 +140,12 @@
     <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
     <script>
         emailjs.init("hoz22gRCGAh20qkjt");
+
+        const defaultGifts = [
+            "Origami Kit", "Frame", "Note Book", "Monthly Planner", "Note Book", 
+            "Pizza Socks", "Cucumber Mask", "Rose", "Surprise Bag", "Magic beans", 
+            "Toy", "Beach Racket", "Hang Grip", "Head Massager"
+        ];
 
         function drawWheel(canvasId, colors, gifts) {
             const canvas = document.getElementById(canvasId);
@@ -169,7 +182,7 @@
         function spinWheel() {
             const canvas = document.getElementById("wheelCanvas");
             const ctx = canvas.getContext("2d");
-            const gifts = Array.from({ length: document.getElementById("numSegments").value }, (_, i) => document.getElementById(`gift${i + 1}`).value);
+            const gifts = Array.from(document.querySelectorAll(".gift-input"), input => input.value);
             let angle = 0;
             const spinTime = Math.random() * 3000 + 2000;
             const spinInterval = 20;
@@ -195,18 +208,45 @@
             const numSegments = document.getElementById("numSegments").value;
             const giftsContainer = document.getElementById("giftsContainer");
             giftsContainer.innerHTML = "";
-            for (let i = 1; i <= numSegments; i++) {
-                const giftInput = document.createElement("input");
-                giftInput.type = "text";
-                giftInput.id = `gift${i}`;
-                giftInput.placeholder = `Cadeau ${i}`;
-                giftInput.value = `Cadeau ${i}`;
-                giftsContainer.appendChild(giftInput);
-                giftsContainer.appendChild(document.createElement("br"));
+            for (let i = 0; i < numSegments; i++) {
+                createGiftField(giftsContainer, i, defaultGifts[i] || `Cadeau ${i + 1}`);
             }
         }
 
+        function createGiftField(container, index, value) {
+            const giftWrapper = document.createElement("div");
+            giftWrapper.classList.add("gift-wrapper");
+
+            const giftInput = document.createElement("input");
+            giftInput.type = "text";
+            giftInput.classList.add("gift-input");
+            giftInput.value = value;
+            giftWrapper.appendChild(giftInput);
+
+            const deleteCheckbox = document.createElement("input");
+            deleteCheckbox.type = "checkbox";
+            deleteCheckbox.classList.add("delete-checkbox");
+            deleteCheckbox.addEventListener("change", () => {
+                if (deleteCheckbox.checked) {
+                    giftWrapper.remove();
+                    updateNumSegments();
+                }
+            });
+            giftWrapper.appendChild(deleteCheckbox);
+
+            container.appendChild(giftWrapper);
+        }
+
+        function updateNumSegments() {
+            document.getElementById("numSegments").value = document.querySelectorAll(".gift-input").length;
+        }
+
         document.getElementById("numSegments").addEventListener("input", updateGiftFields);
+
+        document.getElementById("addGiftButton").addEventListener("click", () => {
+            createGiftField(document.getElementById("giftsContainer"), document.querySelectorAll(".gift-input").length, "");
+            updateNumSegments();
+        });
 
         document.getElementById("customizeButton").addEventListener("click", () => {
             document.getElementById("popup").style.display = "flex";
@@ -223,12 +263,12 @@
         });
 
         document.getElementById("saveButton").addEventListener("click", () => {
-            const gifts = Array.from({ length: document.getElementById("numSegments").value }, (_, i) => document.getElementById(`gift${i + 1}`).value);
+            const gifts = Array.from(document.querySelectorAll(".gift-input"), input => input.value);
             drawWheel("wheelCanvas", ["#F0E68C", "#D1E8E2"], gifts);
             document.getElementById("popupContent").style.display = "none";
         });
 
-        drawWheel("wheelCanvas", ["#F0E68C", "#D1E8E2"], Array.from({ length: 12 }, (_, i) => `Cadeau ${i + 1}`));
+        drawWheel("wheelCanvas", ["#F0E68C", "#D1E8E2"], defaultGifts);
         document.getElementById("spinButton").addEventListener("click", spinWheel);
 
         // Initialiser les champs des cadeaux
