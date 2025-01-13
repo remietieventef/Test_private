@@ -14,9 +14,17 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
             height: 100vh;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 50px;
         }
 
         .wheel {
@@ -74,11 +82,11 @@
             text-align: center;
         }
 
-        .password-container, .wheel-settings {
+        .password-container, .wheel-settings, .color-settings {
             margin: 20px 0;
         }
 
-        #passwordInput, #numSegments {
+        #passwordInput, #numSegments, .color-input {
             padding: 10px;
             font-size: 16px;
             width: 200px;
@@ -132,6 +140,12 @@
                     <!-- Champs pour les cadeaux seront ajoutés dynamiquement ici -->
                 </div>
                 <button id="addGiftButton">Ajouter un cadeau</button>
+            </div>
+            <div class="color-settings">
+                <label for="wheelColor">Couleur de la roue :</label>
+                <input type="color" id="wheelColor" class="color-input" value="#F0E68C">
+                <label for="buttonColor">Couleur des boutons :</label>
+                <input type="color" id="buttonColor" class="color-input" value="#4CAF50">
                 <button id="saveButton">Sauvegarder</button>
             </div>
         </div>
@@ -142,9 +156,9 @@
         emailjs.init("hoz22gRCGAh20qkjt");
 
         const defaultGifts = [
-            "Origami Kit ✂️", "Frame 🖼️", "Note Book 📗", "Monthly Planner 📅", "Note Book 📙", 
-            "Sock 🍕🍩", "Cucumber Mask 🥒", "Rose 🌹", "Surprise Bag", "Magic beans 🌱", 
-            "Toy 🔫", "Beach Racket 🏓", "Hang Grip 🏋️", "Head Massager 💆‍♀️"
+            "Origami Kit", "Frame", "Note Book", "Monthly Planner", "Note Book", 
+            "Pizza Socks", "Cucumber Mask", "Rose", "Surprise Bag", "Magic beans", 
+            "Toy", "Beach Racket", "Hang Grip", "Head Massager"
         ];
 
         function drawWheel(canvasId, colors, gifts) {
@@ -189,7 +203,7 @@
 
             const interval = setInterval(() => {
                 angle += 20 * Math.PI / 180;
-                drawWheel("wheelCanvas", ["#F0E68C", "#D1E8E2"], gifts);
+                drawWheel("wheelCanvas", [document.getElementById("wheelColor").value], gifts);
                 ctx.translate(150, 150);
                 ctx.rotate(angle);
                 ctx.translate(-150, -150);
@@ -264,7 +278,8 @@
 
         document.getElementById("saveButton").addEventListener("click", () => {
             const gifts = Array.from(document.querySelectorAll(".gift-input"), input => input.value);
-            drawWheel("wheelCanvas", ["#F0E68C", "#D1E8E2"], gifts);
+            drawWheel("wheelCanvas", [document.getElementById("wheelColor").value], gifts);
+            document.getElementById("spinButton").style.backgroundColor = document.getElementById("buttonColor").value;
             document.getElementById("popupContent").style.display = "none";
         });
 
