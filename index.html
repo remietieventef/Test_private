@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roue de Noël Personnalisée</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: url('Roue Noel.jpg') no-repeat center center fixed;
+            background-size: cover;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .wheel {
+            margin: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        canvas {
+            border: 2px solid #fff;
+            border-radius: 50%;
+        }
+
+        .result, #spinButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .result {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 10px;
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            background-color: #e8f5e9;
+            width: 200px;
+            text-align: center;
+        }
+
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 3;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .popup-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .password-container, .wheel-settings {
+            margin: 20px 0;
+        }
+
+        #passwordInput, #numSegments {
+            padding: 10px;
+            font-size: 16px;
+            width: 200px;
+            margin-bottom: 20px;
+        }
+
+        #accessButton, #saveButton {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button id="customizeButton" class="top-right">Personnaliser</button>
+        <div class="wheel">
+            <canvas id="wheelCanvas" width="300" height="300"></canvas>
+            <div id="result" class="result">Résultat: ?</div>
+            <button id="spinButton">Tourner</button>
+        </div>
+    </div>
+
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <h2>Entrez le mot de passe pour accéder à la personnalisation</h2>
+            <div class="password-container">
+                <input type="password" id="passwordInput" placeholder="Mot de passe">
+                <button id="accessButton">Accéder</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="popupContent" class="popup">
+        <div class="popup-content">
+            <h2>Personnalisez la roue</h2>
+            <div class="wheel-settings">
+                <label for="numSegments">Nombre de cases :</label>
+                <input type="number" id="numSegments" min="1" max="20" value="12">
+                <div id="giftsContainer">
+                    <!-- Champs pour les cadeaux seront ajoutés dynamiquement ici -->
+                </div>
+                <button id="saveButton">Sauvegarder</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <script>
+        emailjs.init("hoz22gRCGAh20qkjt");
+
+        function drawWheel(canvasId, colors, gifts) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext("2d");
+            const segments = gifts.length;
+            const arc = (2 * Math.PI) / segments;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            gifts.forEach((gift, i) => {
+                const angle = i * arc;
+                ctx.beginPath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.moveTo(150, 150);
+                ctx.arc(150, 150, 150, angle, angle + arc);
+                ctx.fill();
+
+                ctx.save();
+                ctx.translate(150, 150);
+                ctx.rotate(angle + arc / 2);
+                ctx.fillStyle = "black";
+                ctx.textAlign = "center";
+                ctx.font = "14px Arial";
+                ctx.fillText(gift, 100, 10);
+                ctx.restore();
+            });
+
+            ctx.beginPath();
+            ctx.arc(150, 150, 30, 0, 2 * Math.PI);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+        }
+
+        function spinWheel() {
+            const canvas = document.getElementById("wheelCanvas");
+            const ctx = canvas.getContext("2d");
+            const gifts = Array.from({ length: document.getElementById("numSegments").value }, (_, i) => document.getElementById(`gift${i + 1}`).value);
+            let angle = 0;
+            const spinTime = Math.random() * 3000 + 2000;
+            const spinInterval = 20;
+
+            const interval = setInterval(() => {
+                angle += 20 * Math.PI / 180;
+                drawWheel("wheelCanvas", ["#F0E68C", "#D1E8E2"], gifts);
+                ctx.translate(150, 150);
+                ctx.rotate(angle);
+                ctx.translate(-150, -150);
+            }, spinInterval);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                const resultIndex = Math.floor(Math.random() * gifts.length);
+                document.getElementById("result").textContent = `Résultat: ${gifts[resultIndex]}`;
+                // Envoi de l'e-mail avec le score
+                sendEmail(gifts[resultIndex]);
+            }, spinTime);
+        }
+
+        function updateGiftFields() {
+            const numSegments = document.getElementById("numSegments").value;
+            const giftsContainer = document.getElementById("giftsContainer");
+            giftsContainer.innerHTML = "";
+            for (let i = 1; i <= numSegments; i++) {
+                const giftInput = document.createElement("input");
+                giftInput.type = "text";
+                giftInput.id = `gift${i}`;
+                giftInput.placeholder = `Cadeau ${i}`;
+                giftInput.value = `Cadeau ${i}`;
+                giftsContainer.appendChild(giftInput);
+                giftsContainer.appendChild(document.createElement("br"));
+            }
+        }
+
+        document.getElementById("numSegments").addEventListener("input", updateGiftFields);
+
+        document.getElementById("customizeButton").addEventListener("click", () => {
+            document.getElementById("popup").style.display = "flex";
+        });
+
+        document.getElementById("accessButton").addEventListener("click", () => {
+            const password = document.getElementById("passwordInput").value;
+            if (password === "weareeffrance") {
+                document.getElementById("popup").style.display = "none";
+                document.getElementById("popupContent").style.display = "flex";
+            } else {
+                alert("Mot de passe incorrect !");
+            }
+        });
+
+        document.getElementById("saveButton").addEventListener("click", () => {
+            const gifts = Array.from({ length: document.getElementById("numSegments").value }, (_, i) => document.getElementById(`gift${i + 1}`).value);
+            drawWheel("wheelCanvas", ["#F0E68C", "#D1E8E2"], gifts);
+            document.getElementById("popupContent").style.display = "none";
+        });
+
+        drawWheel("wheelCanvas", ["#F0E68C", "#D1E8E2"], Array.from({ length: 12 }, (_, i) => `Cadeau ${i + 1}`));
+        document.getElementById("spinButton").addEventListener("click", spinWheel);
+
+        // Initialiser les champs des cadeaux
+        updateGiftFields();
+    </script>
+</body>
+</html>
